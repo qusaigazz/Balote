@@ -6,6 +6,9 @@ from typing import List, Tuple
 from .cards import Card, Rank, Suit
 from .gamestate import GameState
 
+from .savegame import Action
+from .serialization import code_to_card
+
 SUN_ORDER = (
     Rank.SEVEN, Rank.EIGHT, Rank.NINE, Rank.JACK,
     Rank.QUEEN, Rank.KING, Rank.TEN, Rank.ACE
@@ -212,3 +215,28 @@ def apply_move(state: GameState, card: Card) -> GameState:
         scores=state.scores,
         trick_number=state.trick_number,
     )
+
+
+# for replay and savegame 
+
+def apply_action(state: GameState, action: Action) -> GameState:
+    """
+    Apply a logged Action to the GameState.
+
+    This function exists ONLY to support:
+    - SaveGame replay
+    - analyzer / solver stepping
+    - bot-vs-bot simulations
+
+    It is a thin wrapper that decodes the Action payload
+    and forwards the move to the real game logic.
+    """
+
+    if action.type == "PLAY_CARD":
+        # Decode card code (e.g. "QS") back into Card object
+        card = code_to_card(action.payload["card"])
+
+        # Delegate to existing rule logic
+        return apply_move(state, card)
+
+    raise ValueError(f"Unsupported action type: {action.type}")
