@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import replace
 from typing import List, Tuple
 
 from .cards import Card, Rank, Suit
@@ -231,6 +230,12 @@ def apply_action(state: GameState, action: Action) -> GameState:
     It is a thin wrapper that decodes the Action payload
     and forwards the move to the real game logic.
     """
+
+    # optional but very useful sanity check during replay/logging
+    if action.player != state.to_play:
+        raise ValueError(
+            f"Action player mismatch: action.player={action.player}, state.to_play={state.to_play}"
+        )
 
     if action.type == "PLAY_CARD":
         # Decode card code (e.g. "QS") back into Card object

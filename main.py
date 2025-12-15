@@ -1,10 +1,20 @@
+import os
 import random
+from datetime import datetime
 
 from balote_engine.deck import make_deck, deal
 from balote_engine.gamestate import GameState
 from balote_engine.cards import Suit
 from balote_engine.rules import legal_moves, apply_move
 from balote_engine.terminal import is_terminal
+
+from balote_engine.savegame import SaveGame, Action
+from balote_engine.serialization import card_to_code
+
+from datetime import datetime, timezone
+from balote_engine.savegame import SaveGame
+from balote_engine.replay import replay
+
 
 
 def total_cards_in_game(state: GameState) -> int:
@@ -13,7 +23,11 @@ def total_cards_in_game(state: GameState) -> int:
 
 
 def main():
-    rng = random.Random(0)  # fixed seed for reproducibility
+    rng_seed = 0
+    rng = random.Random(rng_seed)  # fixed seed for reproducibility
+
+    SAVE_THIS_GAME = True
+    SAVE_DIR = "games"
 
     # 1) Build and deal the deck
     deck = make_deck()
@@ -42,6 +56,15 @@ def main():
     # Sanity: total cards at start
     assert total_cards_in_game(state) == 32
 
+    # --- SaveGame: snapshot the starting world ONCE, before any player acts ---
+    savegame = SaveGame(
+        version=1,
+        initial=state.to_initial_snapshot(
+            dealer=0,                 # placeholder until bidding exists
+            meta={"rng_seed": rng_seed}
+        ),
+    )
+
     # 4) Play until terminal
     while not is_terminal(state):
         before_trick = state.trick_number
@@ -51,6 +74,17 @@ def main():
         assert len(moves) > 0, "No legal moves available"
 
         card = rng.choice(moves)
+
+        # SaveGame logging needs the actor (player) BEFORE apply_move changes to_play
+        actor = state.to_play
+
+        # --- SaveGame: log the move as an Action (event log) ---
+        savegame = savegame.append(Action(
+            player=actor,
+            type="PLAY_CARD",
+            payload={"card": card_to_code(card)},
+        ))
+
         state = apply_move(state, card)
 
         # Sanity: exactly one card played
@@ -65,7 +99,6 @@ def main():
             after_total == before_total_cards - 4
         ), f"Card count mismatch: before={before_total_cards}, after={after_total}"
 
-
         # If a trick just ended, check consistency
         if state.trick_number != before_trick:
             print(f"Trick {before_trick + 1} completed. Leader is now Player {state.leader}")
@@ -79,6 +112,29 @@ def main():
     assert total_cards_in_game(state) == 0
 
     print("Round finished successfully after 8 tricks.")
+
+    # --- SaveGame: write to disk (optional) ---
+    if SAVE_THIS_GAME:
+        os.makedirs(SAVE_DIR, exist_ok=True)
+
+        # filename helps you identify contract + seed quickly
+        mode = "SUN" if trump is None else f"HOKM_{trump.value}"
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        filename = f"{stamp}_{mode}_seed{rng_seed}.json"
+
+        path = os.path.join(SAVE_DIR, filename)
+
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(savegame.to_json())
+
+        print(f"Saved game to: {path}")
+
+    # --- Replay verification: load JSON -> replay -> assert final matches live ---
+    loaded = SaveGame.from_json(savegame.to_json())
+    replayed_final = replay(loaded)
+
+    assert replayed_final == state, "Replay mismatch: final state differs from live run"
+    print("Replay verified: final state matches live run ✅")
 
 
 if __name__ == "__main__":

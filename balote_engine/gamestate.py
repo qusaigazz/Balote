@@ -17,22 +17,29 @@ class GameState:
 
 
     # for taking initial gamestate and using it for replay analysis 
-    def to_initial_snapshot(self, *, version: int = 1, meta: dict | None = None) -> InitialSnapshot:
-        hands_codes = tuple(
-            tuple(card_to_code(c) for c in hand)
-            for hand in self.hands
-        )
-        trump_code = self.trump.value if self.trump is not None else None
+    def to_initial_snapshot(
+        self, *, version: int = 1, dealer: int = 0, meta: dict | None = None
+    ) -> InitialSnapshot:
+
+        contract_mode = "SUN" if self.trump is None else "HOKM"
+        trump_suit = None if self.trump is None else self.trump.value
+
+        hands_8 = {
+            i: tuple(card_to_code(c) for c in self.hands[i])
+            for i in range(4)
+        }
 
         return InitialSnapshot(
             version=version,
             start_phase="PLAYING",
             playing=PlayingInitial(
-                hands_8=hands_codes,
-                trump=trump_code,
+                dealer=dealer,
                 leader=self.leader,
-                to_play=self.to_play,
+                contract_mode=contract_mode,
+                trump_suit=trump_suit,
+                hands_8=hands_8,
             ),
             meta=meta or {},
         )
+
 
