@@ -32,6 +32,9 @@ def build_initial_state(save: SaveGame) -> GameState:
         trick=tuple(),
         scores=(0, 0),        # scoring later
         trick_number=0,
+        card_points=(0,0),
+        trick_wins=(0, 0),
+
     )
 
 

@@ -14,6 +14,10 @@ class GameState:
     trick: Tuple[Card, ...]              # cards played in current trick
     scores: Tuple[int, int]              # team scores
     trick_number: int                    # 0..7 (8 tricks total)
+    card_points: Tuple[int, int]  # raw points collected from tricks this round
+    trick_wins: Tuple[int, int]   # number of tricks won by each team
+
+
 
 
     # for taking initial gamestate and using it for replay analysis 

@@ -23,6 +23,46 @@ SUN_STRENGTH = {r: i for i, r in enumerate(SUN_ORDER)}
 TRUMP_STRENGTH = {r: i for i, r in enumerate(HOKM_TRUMP_ORDER)}
 
 
+def team_of_player(player: int) -> int:
+    # Team 0: players 0 & 2, Team 1: players 1 & 3
+    return player % 2
+
+
+# Sun base values (also used for non-trump cards in Hokm)
+_SUN_CARD_POINTS = {
+    Rank.ACE: 11,
+    Rank.TEN: 10,
+    Rank.KING: 4,
+    Rank.QUEEN: 3,
+    Rank.JACK: 2,
+    Rank.NINE: 0,
+    Rank.EIGHT: 0,
+    Rank.SEVEN: 0,
+}
+
+
+def points_for_card(card: Card, trump: Suit | None) -> int:
+    # Sun: all cards use Sun points
+    if trump is None:
+        return _SUN_CARD_POINTS[card.rank]
+
+    # Hokm: trump J and trump 9 are special
+    if card.suit is trump and card.rank is Rank.JACK:
+        return 20
+    if card.suit is trump and card.rank is Rank.NINE:
+        return 14
+
+    # otherwise same as Sun
+    return _SUN_CARD_POINTS[card.rank]
+
+
+def points_for_trick(cards: Tuple[Card, ...], trump: Suit | None, *, is_last_trick: bool) -> int:
+    pts = sum(points_for_card(c, trump) for c in cards)
+    if is_last_trick:
+        pts += 10  # floor
+    return pts
+
+
 def leading_suit(state: GameState) -> Suit | None:
     """Suit of the first card in the current trick, or None if trick empty."""
     if len(state.trick) == 0:
@@ -191,8 +231,30 @@ def apply_move(state: GameState, card: Card) -> GameState:
             trick=new_trick,
             scores=state.scores,
             trick_number=state.trick_number,
+            card_points=state.card_points,   
+            trick_wins=state.trick_wins,
         )
         winner, _ = current_trick_winner(temp_state)
+
+        # --- NEW: scoring for this completed trick ---
+        is_last = (state.trick_number == 7)
+        trick_pts = points_for_trick(new_trick, state.trump, is_last_trick=is_last)
+
+        wteam = team_of_player(winner)
+        cp0, cp1 = state.card_points
+        if wteam == 0:
+            new_card_points = (cp0 + trick_pts, cp1)
+        else:
+            new_card_points = (cp0, cp1 + trick_pts)
+        # --- end card points ---
+
+        # --------- NEW: TRICK WINS ----------
+        tw0, tw1 = state.trick_wins
+        if wteam == 0:
+            new_trick_wins = (tw0 + 1, tw1)
+        else:
+            new_trick_wins = (tw0, tw1 + 1)
+        #------------------------------------#
 
         return GameState(
             hands=tuple(hands),
@@ -200,9 +262,12 @@ def apply_move(state: GameState, card: Card) -> GameState:
             leader=winner,
             to_play=winner,
             trick=tuple(),
-            scores=state.scores,              # scoring later
+            scores=state.scores,                 # leave as-is for now
             trick_number=state.trick_number + 1,
+            card_points=new_card_points,         
+            trick_wins=new_trick_wins,
         )
+
 
     # Otherwise, trick still in progress
     return GameState(
@@ -213,6 +278,8 @@ def apply_move(state: GameState, card: Card) -> GameState:
         trick=new_trick,
         scores=state.scores,
         trick_number=state.trick_number,
+        card_points=state.card_points,
+        trick_wins=state.trick_wins,
     )
 
 
