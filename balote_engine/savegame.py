@@ -4,7 +4,8 @@ from typing import Any, Literal, Optional
 import json
 
 StartPhase = Literal["BIDDING", "PLAYING"]
-ActionType = Literal["PASS", "BID_SUN", "BID_HOKM", "RAISE", "PLAY_CARD"]
+ActionType = Literal["PASS", "BID_SUN", "BID_ASHKAL", "BID_HOKM", "BID_HOKM_THANI", "RAISE", "FINALIZE_CONTRACT", "PLAY_CARD",]
+
 
 # --- Initial snapshots ---
 

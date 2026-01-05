@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import FrozenSet, Iterable, List, Optional, Tuple
+from typing import FrozenSet, List, Optional, Tuple
 
 from .cards import Card, Rank, Suit
 
@@ -31,6 +31,9 @@ _HOKM_FOUR_UNITS = {
     Rank.ACE: 10,   # 4 aces treated as 100 -> 10 units in Hokm
 }
 
+# Balote: K + Q of trump (HOKM / HOKM_THANI only)
+_BALOTE_UNITS = 2
+
 # Sequence rank order for projects (standard consecutive order)
 _SEQ_ORDER: Tuple[Rank, ...] = (
     Rank.SEVEN, Rank.EIGHT, Rank.NINE, Rank.TEN,
@@ -54,18 +57,21 @@ class Meld:
     A single meld (project) that is fully contained within ONE player's hand.
     points_units: FINAL score units based on mode (SUN/HOKM)
     strength_key: used to compare melds of same points_units
+    ignores_trick_requirement: True only for BALOTE (per your rules)
     """
-    kind: str                    # "SEQ" or "FOUR"
+    kind: str                    # "SEQ" or "FOUR" or "BALOTE"
     points_units: int
     cards: FrozenSet[Card]
     strength_key: Tuple[int, ...]
     owner_player: int            # which player hand this meld belongs to
+    ignores_trick_requirement: bool = False
 
     def short(self) -> str:
         if self.kind == "SEQ":
-            # highest rank index is strength_key[0]
             return f"SEQ({self.points_units})"
-        return f"FOUR({self.points_units})"
+        if self.kind == "FOUR":
+            return f"FOUR({self.points_units})"
+        return f"BALOTE({self.points_units})"
 
 
 # -----------------------
@@ -97,6 +103,39 @@ def _team_players(team: int) -> Tuple[int, int]:
     return (0, 2) if team == 0 else (1, 3)
 
 
+def _balote_meld_for_hand(
+    hand: Tuple[Card, ...],
+    owner_player: int,
+    mode: str,
+    trump: Optional[Suit],
+) -> Optional[Meld]:
+    """
+    BALOTE: King + Queen of trump suit (HOKM only).
+    Special rule: pays even if team wins zero tricks => ignores_trick_requirement=True.
+    """
+    if mode != "HOKM" or trump is None:
+        return None
+
+    has_k = any(c.rank == Rank.KING and c.suit == trump for c in hand)
+    has_q = any(c.rank == Rank.QUEEN and c.suit == trump for c in hand)
+    if not (has_k and has_q):
+        return None
+
+    cards = frozenset(
+        c for c in hand
+        if c.suit == trump and c.rank in (Rank.KING, Rank.QUEEN)
+    )
+
+    return Meld(
+        kind="BALOTE",
+        points_units=_BALOTE_UNITS,
+        cards=cards,
+        strength_key=(0,),
+        owner_player=owner_player,
+        ignores_trick_requirement=True,
+    )
+
+
 # -----------------------
 # Candidate generation (per HAND)
 # -----------------------
@@ -113,11 +152,9 @@ def _all_sequence_melds_for_hand(hand: Tuple[Card, ...], owner_player: int, mode
     melds: List[Meld] = []
 
     for suit, cards in by_suit.items():
-        # sort by sequence rank index
         cards_sorted = sorted(cards, key=lambda c: _SEQ_INDEX[c.rank])
         idxs = [_SEQ_INDEX[c.rank] for c in cards_sorted]
 
-        # find consecutive runs in these indices
         start = 0
         while start < len(cards_sorted):
             end = start
@@ -127,13 +164,11 @@ def _all_sequence_melds_for_hand(hand: Tuple[Card, ...], owner_player: int, mode
             run_cards = cards_sorted[start:end + 1]
             run_len = len(run_cards)
 
-            # From a run, generate candidates of length 3/4/5.
-            # We generate ALL windows so we don't miss disjoint possibilities.
             for L in (5, 4, 3):
                 if run_len >= L:
                     for i in range(0, run_len - L + 1):
                         window = run_cards[i:i + L]
-                        top_rank = window[-1].rank  # highest rank in the sequence
+                        top_rank = window[-1].rank
                         top_idx = _SEQ_INDEX[top_rank]
 
                         units = _seq_units(mode, L)
@@ -142,7 +177,6 @@ def _all_sequence_melds_for_hand(hand: Tuple[Card, ...], owner_player: int, mode
                                 kind="SEQ",
                                 points_units=units,
                                 cards=frozenset(window),
-                                # strength: higher top_idx is stronger; also include length for stability
                                 strength_key=(top_idx, L),
                                 owner_player=owner_player,
                             )
@@ -182,22 +216,36 @@ def _all_four_melds_for_hand(hand: Tuple[Card, ...], owner_player: int, mode: st
     return melds
 
 
-def all_meld_candidates_for_hand(hand: Tuple[Card, ...], owner_player: int, mode: str) -> List[Meld]:
-    return _all_sequence_melds_for_hand(hand, owner_player, mode) + _all_four_melds_for_hand(hand, owner_player, mode)
+def all_meld_candidates_for_hand(
+    hand: Tuple[Card, ...],
+    owner_player: int,
+    mode: str,
+    trump: Optional[Suit] = None,
+) -> List[Meld]:
+    melds = _all_sequence_melds_for_hand(hand, owner_player, mode) + _all_four_melds_for_hand(hand, owner_player, mode)
+    balote = _balote_meld_for_hand(hand, owner_player, mode, trump)
+    if balote is not None:
+        melds.append(balote)
+    return melds
 
 
 # -----------------------
 # Best non-overlapping selection (per HAND)
 # -----------------------
 
-def best_meld_set_for_hand(hand: Tuple[Card, ...], owner_player: int, mode: str) -> Tuple[int, Tuple[Meld, ...]]:
+def best_meld_set_for_hand(
+    hand: Tuple[Card, ...],
+    owner_player: int,
+    mode: str,
+    trump: Optional[Suit] = None,
+) -> Tuple[int, Tuple[Meld, ...]]:
     """
     Choose the best set of melds for ONE hand, with the constraint:
     - No card may appear in more than one counted meld (prevents overlap double-counting).
 
     Returns (total_units, chosen_melds).
     """
-    candidates = all_meld_candidates_for_hand(hand, owner_player, mode)
+    candidates = all_meld_candidates_for_hand(hand, owner_player, mode, trump=trump)
     n = len(candidates)
     if n == 0:
         return 0, tuple()
@@ -205,7 +253,6 @@ def best_meld_set_for_hand(hand: Tuple[Card, ...], owner_player: int, mode: str)
     best_units = -1
     best_choice: Tuple[Meld, ...] = tuple()
 
-    # brute force over subsets (n is small because a hand is only 8 cards)
     for mask in range(1 << n):
         used: set[Card] = set()
         total = 0
@@ -215,7 +262,6 @@ def best_meld_set_for_hand(hand: Tuple[Card, ...], owner_player: int, mode: str)
         for i in range(n):
             if (mask >> i) & 1:
                 m = candidates[i]
-                # overlap check
                 if any(c in used for c in m.cards):
                     ok = False
                     break
@@ -226,10 +272,6 @@ def best_meld_set_for_hand(hand: Tuple[Card, ...], owner_player: int, mode: str)
         if not ok:
             continue
 
-        # tie-break for "best" within a hand:
-        # 1) higher total units
-        # 2) higher sorted list of meld values (prefers big melds)
-        # 3) higher sorted strength keys (stable deterministic)
         chosen_t = tuple(sorted(chosen, key=lambda m: (m.points_units, m.strength_key), reverse=True))
         value_profile = tuple(m.points_units for m in chosen_t)
         strength_profile = tuple(m.strength_key for m in chosen_t)
@@ -256,7 +298,8 @@ def best_meld_set_for_hand(hand: Tuple[Card, ...], owner_player: int, mode: str)
 def compute_team_projects_from_hands(
     hands: Tuple[Tuple[Card, ...], ...],
     team: int,
-    mode: str
+    mode: str,
+    trump: Optional[Suit] = None,
 ) -> Tuple[int, Tuple[Meld, ...]]:
     """
     Compute team projects as the sum of best meld sets from the TWO individual hands on that team.
@@ -264,8 +307,8 @@ def compute_team_projects_from_hands(
     """
     p1, p2 = _team_players(team)
 
-    units1, melds1 = best_meld_set_for_hand(hands[p1], owner_player=p1, mode=mode)
-    units2, melds2 = best_meld_set_for_hand(hands[p2], owner_player=p2, mode=mode)
+    units1, melds1 = best_meld_set_for_hand(hands[p1], owner_player=p1, mode=mode, trump=trump)
+    units2, melds2 = best_meld_set_for_hand(hands[p2], owner_player=p2, mode=mode, trump=trump)
 
     return units1 + units2, melds1 + melds2
 
@@ -277,7 +320,6 @@ def compute_team_projects_from_hands(
 def _top_meld(melds: Tuple[Meld, ...]) -> Optional[Meld]:
     if not melds:
         return None
-    # top meld = max by (points_units, strength_key)
     return max(melds, key=lambda m: (m.points_units, m.strength_key))
 
 
@@ -317,7 +359,6 @@ def projects_winner(
     if k1 > k0:
         return 1
 
-    # exact tie -> authority
     return _authority_team(authority_player)
 
 
@@ -325,7 +366,8 @@ def compute_projects_settlement(
     hands: Tuple[Tuple[Card, ...], ...],
     mode: str,
     *,
-    authority_player: int
+    authority_player: int,
+    trump: Optional[Suit] = None,
 ) -> Tuple[Optional[int], int, Tuple[Meld, ...]]:
     """
     Returns:
@@ -334,8 +376,8 @@ def compute_projects_settlement(
     This does NOT check "must win a trick" eligibility.
     It only computes what projects exist and who wins them.
     """
-    t0_units, t0_melds = compute_team_projects_from_hands(hands, team=0, mode=mode)
-    t1_units, t1_melds = compute_team_projects_from_hands(hands, team=1, mode=mode)
+    t0_units, t0_melds = compute_team_projects_from_hands(hands, team=0, mode=mode, trump=trump)
+    t1_units, t1_melds = compute_team_projects_from_hands(hands, team=1, mode=mode, trump=trump)
 
     winner = projects_winner(t0_melds, t1_melds, authority_player=authority_player)
     if winner is None:
@@ -345,3 +387,4 @@ def compute_projects_settlement(
         return 0, t0_units, t0_melds
     else:
         return 1, t1_units, t1_melds
+

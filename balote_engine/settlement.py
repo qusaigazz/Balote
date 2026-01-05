@@ -92,13 +92,15 @@ def finalize_with_projects(
     projects_winner_team: Optional[int],
     projects_units: int,
     trick_wins: Tuple[int, int],
+    winner_melds: Tuple[object, ...] = tuple(),   # NEW: used for BALOTE exception
 ) -> Tuple[int, int]:
     """
     Final round score after cards + projects + NC takeover rule.
 
     Rules:
     - Projects add after base_score.
-    - Projects apply only if winner_team won >= 1 trick.
+    - Projects apply only if winner_team won >= 1 trick,
+      EXCEPT Balote (or any meld marked ignores_trick_requirement=True).
     - After projects, if NC score > CT score, NC takes ALL.
     - No raw-point draw resolution after projects.
     """
@@ -108,11 +110,16 @@ def finalize_with_projects(
 
     s0, s1 = base_score
 
+    # NEW: Balote exception (or any future "always pays" meld)
+    ignore_trick_req = any(
+        getattr(m, "ignores_trick_requirement", False) for m in winner_melds
+    )
+
     # Apply projects if eligible
     if (
         projects_winner_team is not None
         and projects_units > 0
-        and trick_wins[projects_winner_team] > 0
+        and (trick_wins[projects_winner_team] > 0 or ignore_trick_req)
     ):
         if projects_winner_team == 0:
             s0 += projects_units
@@ -123,7 +130,12 @@ def finalize_with_projects(
     scores = [s0, s1]
     if scores[nc] > scores[ct]:
         out = [0, 0]
-        out[nc] = total
+        
+        # "Take all" should include any awarded projects too.
+        # base_score should sum to total (16 or 26).
+        projects_total_awarded = max(0, (s0 + s1) - total)
+
+        out[nc] = total + projects_total_awarded
         return tuple(out)
 
     return (s0, s1)
