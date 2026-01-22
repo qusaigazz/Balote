@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Belote Replay</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div id="splash">Balote Plus +</div>
+
+<div id="page">
+  <h1 id="title">Balote Plus +</h1>
+  <div id="subtitle">by Qusai Gazzaz</div>
+
+  <div id="replay-shell">
+    <div id="timeline-column">
+      <div id="timeline"></div>
+    </div>
+
+    <div id="app">
+
+      <!-- Top HUD -->
+      <div id="topbar">
+        <div id="contract">SUN</div>
+        <div id="floor-card-wrap">
+          <span>Floor</span>
+          <div id="floor-card"></div>
+        </div>
+        <div id="scores">
+          <span id="p0-score">0</span>
+          <span id="p1-score">0</span>
+          <span id="p2-score">0</span>
+          <span id="p3-score">0</span>
+        </div>
+      </div>
+
+      <!-- Main Board -->
+      <div id="board">
+
+        <!-- Player 1 (top) -->
+        <div class="hand hand-top" id="hand-1">
+          <span class="player-badge player-1">P1</span>
+        </div>
+
+        <!-- Player 2 (left) -->
+        <div class="hand hand-left" id="hand-2">
+          <span class="player-badge player-2">P2</span>
+        </div>
+
+        <!-- Trick Area -->
+        <div id="trick-area">
+          <div class="trick-slot" id="trick-0"></div>
+          <div class="trick-slot" id="trick-1"></div>
+          <div class="trick-slot" id="trick-2"></div>
+          <div class="trick-slot" id="trick-3"></div>
+        </div>
+
+        <!-- Player 3 (right) -->
+        <div class="hand hand-right" id="hand-3">
+          <span class="player-badge player-3">P3</span>
+        </div>
+
+        <!-- Player 0 (bottom, main) -->
+        <div class="hand hand-bottom" id="hand-0">
+          <span class="player-badge player-0">P0</span>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div id="controls-column">
+      <div id="controls">
+        <div id="pov">
+          <label for="pov-select">POV</label>
+          <select id="pov-select">
+            <option value="0">P0</option>
+            <option value="1">P1</option>
+            <option value="2">P2</option>
+            <option value="3">P3</option>
+          </select>
+        </div>
+        <button id="show-all" aria-pressed="false">Show All</button>
+        <div class="control-row">
+          <button id="prev" aria-label="Previous">⏮</button>
+          <button id="play" aria-label="Play">▶</button>
+          <button id="next" aria-label="Next">⏭</button>
+        </div>
+        <label id="speed-wrap" for="speed-select">Speed</label>
+        <select id="speed-select">
+          <option value="0.5">0.5x</option>
+          <option value="1" selected>1x</option>
+          <option value="2">2x</option>
+          <option value="4">4x</option>
+        </select>
+        <input type="range" id="slider" min="0" value="0" />
+        <span id="step-label">0</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="post-replay-spacer"></div>
+  <div id="about">
+    A clean, deterministic replay viewer for Saudi Balote. Navigate the
+    timeline to inspect bids, tricks, and player turns with a consistent POV.
+  </div>
+</div>
+
+<div id="toast" aria-live="polite"></div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

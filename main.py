@@ -456,7 +456,7 @@ def main():
     rng_seed = 0
     rng = random.Random(rng_seed)  # fixed seed for reproducibility
 
-    SAVE_THIS_GAME = False
+    SAVE_THIS_GAME = True
     SAVE_DIR = "games"
 
     # Output toggles (keeps main.py clean by default)
