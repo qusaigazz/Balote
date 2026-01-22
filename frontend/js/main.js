@@ -47,13 +47,22 @@ async function main() {
     }
 }
 
-  const povSelect = document.getElementById("pov-select");
-  if (povSelect) {
-    povSelect.value = String(povPlayer);
-    povSelect.onchange = () => {
-      povPlayer = Number(povSelect.value);
-      update(currentStep);
+  const povOptions = document.getElementById("pov-options");
+  if (povOptions) {
+    const povButtons = Array.from(povOptions.querySelectorAll("button[data-pov]"));
+    const setActivePov = () => {
+      povButtons.forEach(btn => {
+        btn.classList.toggle("active", Number(btn.dataset.pov) === povPlayer);
+      });
     };
+    setActivePov();
+    povButtons.forEach(btn => {
+      btn.onclick = () => {
+        povPlayer = Number(btn.dataset.pov);
+        setActivePov();
+        update(currentStep);
+      };
+    });
   }
 
   const showAllBtn = document.getElementById("show-all");

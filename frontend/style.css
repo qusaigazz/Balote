@@ -62,7 +62,7 @@ body {
 }
 
 #title {
-  font-size: 64px;
+  font-size: 96px;
   font-weight: 700;
   letter-spacing: 1.2px;
   margin: 18px 0 12px;
@@ -75,10 +75,20 @@ body {
 
 #subtitle {
   text-align: center;
-  font-size: 16px;
+  font-size: 24px;
   letter-spacing: 1.4px;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 8px;
+  font-family: "Coolvetica Cond", "Segoe UI", sans-serif;
+}
+
+#subtitle-2 {
+  text-align: center;
+  font-size: 20px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
   margin-bottom: 300px;
   font-family: "Coolvetica Cond", "Segoe UI", sans-serif;
 }
@@ -92,7 +102,7 @@ body {
   top: 16px;
   display: grid;
   grid-template-columns: 260px 1fr 260px;
-  gap: 18px;
+  gap: 40px;
   align-items: start;
   justify-content: center;
   margin-bottom: 0;
@@ -114,11 +124,11 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 8px 12px;
-  background: rgba(0, 0, 0, 0.7);
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(6px);
+  background: transparent;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 /* ---------------- Board ---------------- */
@@ -198,7 +208,7 @@ body {
   top: 8px;
   left: 8px;
   padding: 3px 8px;
-  font-size: 11px;
+  font-size: 16px;
   letter-spacing: 0.6px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.08);
@@ -274,12 +284,12 @@ body {
 }
 
 .card.face .card-rank {
-  font-size: 16px;
+  font-size: 24px;
   line-height: 1;
 }
 
 .card.face .card-suit {
-  font-size: 18px;
+  font-size: 27px;
   line-height: 1;
 }
 
@@ -326,11 +336,20 @@ body {
 #trick-area {
   grid-row: 2;
   grid-column: 2;
-  width: 190px;
-  height: 190px;
+  width: 240px;
+  height: 240px;
   position: relative;
   justify-self: center;
   align-self: center;
+}
+
+.floor-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
 }
 #trick-area::before {
   content: none;
@@ -338,26 +357,31 @@ body {
 
 .trick-slot {
   position: absolute;
-  width: 50px;
-  height: 74px;
+  width: 75px;
+  height: 111px;
   background: transparent;
   border-radius: 6px;
 }
 
-#trick-0 { bottom: 8px; left: 70px; }
-#trick-1 { top: 70px; left: 8px; }
-#trick-2 { top: 8px; left: 70px; }
-#trick-3 { top: 70px; right: 8px; }
+#trick-0 { bottom: 0; left: 82px; }
+#trick-1 { top: 64px; left: 0; }
+#trick-2 { top: 0; left: 82px; }
+#trick-3 { top: 64px; right: 0; }
 
 .trick-slot {
   --from-x: 0px;
   --from-y: 0px;
 }
 
-#trick-0 { --from-y: 80px; }
-#trick-1 { --from-x: -80px; }
-#trick-2 { --from-y: -80px; }
-#trick-3 { --from-x: 80px; }
+#trick-0 { --from-y: 110px; }
+#trick-1 { --from-x: -110px; }
+#trick-2 { --from-y: -110px; }
+#trick-3 { --from-x: 110px; }
+
+#trick-area .card {
+  width: 75px;
+  height: 111px;
+}
 
 .card.in-play {
   opacity: 0;
@@ -383,18 +407,20 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  background: rgba(0, 0, 0, 0.7);
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(6px);
+  justify-content: flex-start;
+  gap: 14px;
+  padding: 20px 18px;
+  background: #000;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+  backdrop-filter: none;
 }
 
 #controls .control-row {
   display: flex;
   gap: 6px;
+  justify-content: center;
 }
 
 /* ---------------- Timeline ---------------- */
@@ -402,13 +428,13 @@ body {
 #timeline {
   width: 260px;
   height: 720px;
-  background: rgba(0, 0, 0, 0.7);
+  background: #000;
   border-radius: 8px;
   overflow-y: auto;
   padding: 10px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(6px);
+  backdrop-filter: none;
 }
 
 #controls-column,
@@ -422,7 +448,7 @@ body {
   align-items: center;
   gap: 8px;
   padding: 6px 8px;
-  font-size: 13px;
+  font-size: 20px;
   cursor: pointer;
   border-left: 4px solid transparent;
   border-radius: 6px;
@@ -483,58 +509,98 @@ body {
 }
 #pov {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 8px;
-  font-size: 12px;
+  font-size: 18px;
   text-transform: uppercase;
   letter-spacing: 0.6px;
   opacity: 0.85;
 }
 
-#pov-select {
-  background: #101010;
-  color: #e6eef7;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  padding: 4px 8px;
-  font-size: 12px;
+#pov-options {
+  display: flex;
+  gap: 6px;
+}
+
+#pov-options button {
+  background: #fff;
+  color: #000;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#pov-options button.active {
+  border-color: #000;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.35);
 }
 
 #controls button {
-  background: #0a0a0a;
-  color: #f2f2f2;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  padding: 6px 8px;
-  font-size: 12px;
+  background: #fff;
+  color: #000;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 18px;
   line-height: 1;
   cursor: pointer;
 }
 
 #controls button:hover {
-  border-color: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.12);
+  border-color: #000;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.25);
 }
 
 #speed-wrap {
-  font-size: 11px;
+  font-size: 16px;
   text-transform: uppercase;
   letter-spacing: 0.6px;
   opacity: 0.75;
+  text-align: center;
 }
 
 #speed-select {
-  background: #101010;
-  color: #f2f2f2;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  padding: 4px 6px;
-  font-size: 12px;
+  background: #fff;
+  color: #000;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 10px;
+  padding: 6px 14px;
+  font-size: 18px;
+  text-align: center;
+  appearance: none;
+}
+
+#controls,
+#controls * {
+  color: #000;
+}
+
+#controls button,
+#controls #speed-select,
+#pov-options button {
+  color: #000;
+}
+
+
+#show-all {
+  width: 140px;
+}
+
+#controls input[type="range"] {
+  width: 180px;
+  accent-color: #000;
+}
+
+#step-label {
+  text-align: center;
 }
 
 #toast {
   position: fixed;
-  top: 50%;
+  top: 210px;
   left: 50%;
   transform: translate(-50%, -50%) scale(0.98);
   background: transparent;
@@ -545,7 +611,7 @@ body {
   box-shadow:
     0 0 18px rgba(255, 255, 255, 0.25),
     0 0 40px rgba(255, 255, 255, 0.15);
-  font-size: 14px;
+  font-size: 21px;
   letter-spacing: 0.4px;
   opacity: 0;
   pointer-events: none;
@@ -556,21 +622,11 @@ body {
   opacity: 1;
   transform: translate(-50%, -50%) scale(1);
 }
-#floor-card-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  opacity: 0.85;
-}
 
-#floor-card {
-  width: 34px;
-  height: 48px;
+#contract,
+#scores {
+  font-size: 200%;
 }
-
 .card.floor {
   width: 34px;
   height: 48px;
@@ -578,17 +634,17 @@ body {
 }
 
 .card.face.floor .card-rank {
-  font-size: 12px;
+  font-size: 18px;
 }
 
 .card.face.floor .card-suit {
-  font-size: 13px;
+  font-size: 20px;
 }
 #about {
   margin-top: 0;
   width: 1200px;
   text-align: center;
-  font-size: 13px;
+  font-size: 20px;
   letter-spacing: 0.4px;
   color: rgba(255, 255, 255, 0.7);
   padding: 24px 12px 8px;

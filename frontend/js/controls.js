@@ -14,8 +14,16 @@ export function setupControls(maxStep, onStepChange) {
     onStepChange(step);
   }
 
-  document.getElementById("prev").onclick = () => setStep(step - 1);
-  document.getElementById("next").onclick = () => setStep(step + 1);
+  const prevBtn = document.getElementById("prev");
+  const nextBtn = document.getElementById("next");
+  const playBtn = document.getElementById("play");
+
+  prevBtn.onclick = () => setStep(step - 1);
+  nextBtn.onclick = () => setStep(step + 1);
+
+  function setPlayIcon() {
+    playBtn.textContent = playing ? "⏸" : "▶";
+  }
 
   function startTimer() {
     clearInterval(timer);
@@ -23,19 +31,22 @@ export function setupControls(maxStep, onStepChange) {
       if (step >= maxStep) {
         clearInterval(timer);
         playing = false;
+        setPlayIcon();
         return;
       }
       setStep(step + 1);
     }, 500 / speed);
   }
 
-  document.getElementById("play").onclick = () => {
+  playBtn.onclick = () => {
     if (playing) {
       clearInterval(timer);
       playing = false;
+      setPlayIcon();
     } else {
       playing = true;
       startTimer();
+      setPlayIcon();
     }
   };
 

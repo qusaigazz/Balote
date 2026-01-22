@@ -114,6 +114,10 @@ export function render(state, lastAction, prevState, povPlayer, showAll) {
     const slot = document.getElementById(`trick-${i}`);
     slot.innerHTML = "";
   }
+  const oldFloor = document.querySelector("#trick-area .floor-center");
+  if (oldFloor) {
+    oldFloor.remove();
+  }
 
   // Render trick
   const trickCards = state.trick;
@@ -149,16 +153,14 @@ export function render(state, lastAction, prevState, povPlayer, showAll) {
 
   document.getElementById("contract").textContent = state.mode ?? "-";
 
-  const floorWrap = document.getElementById("floor-card");
-  if (floorWrap) {
-    floorWrap.innerHTML = "";
+  if (state.phase !== "PLAYING" && state.floorCard) {
+    const trickArea = document.getElementById("trick-area");
+    const center = document.createElement("div");
+    center.className = "floor-center";
     const cardEl = document.createElement("div");
     cardEl.className = "card floor";
-    if (state.floorCard) {
-      renderCardFace(cardEl, state.floorCard);
-    } else {
-      cardEl.textContent = "-";
-    }
-    floorWrap.appendChild(cardEl);
+    renderCardFace(cardEl, state.floorCard);
+    center.appendChild(cardEl);
+    trickArea.appendChild(center);
   }
 }

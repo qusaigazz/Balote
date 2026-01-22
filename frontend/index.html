@@ -12,6 +12,7 @@
 <div id="page">
   <h1 id="title">Balote Plus +</h1>
   <div id="subtitle">by Qusai Gazzaz</div>
+  <div id="subtitle-2">Designed by Aziz Almashmoum</div>
 
   <div id="replay-shell">
     <div id="timeline-column">
@@ -23,15 +24,10 @@
       <!-- Top HUD -->
       <div id="topbar">
         <div id="contract">SUN</div>
-        <div id="floor-card-wrap">
-          <span>Floor</span>
-          <div id="floor-card"></div>
-        </div>
         <div id="scores">
-          <span id="p0-score">0</span>
-          <span id="p1-score">0</span>
-          <span id="p2-score">0</span>
-          <span id="p3-score">0</span>
+          <span id="team0-score">0</span>
+          <span id="score-sep">:</span>
+          <span id="team1-score">0</span>
         </div>
       </div>
 
@@ -73,19 +69,19 @@
     <div id="controls-column">
       <div id="controls">
         <div id="pov">
-          <label for="pov-select">POV</label>
-          <select id="pov-select">
-            <option value="0">P0</option>
-            <option value="1">P1</option>
-            <option value="2">P2</option>
-            <option value="3">P3</option>
-          </select>
+          <span>POV</span>
+          <div id="pov-options">
+            <button type="button" data-pov="0">P0</button>
+            <button type="button" data-pov="1">P1</button>
+            <button type="button" data-pov="2">P2</button>
+            <button type="button" data-pov="3">P3</button>
+          </div>
         </div>
         <button id="show-all" aria-pressed="false">Show All</button>
         <div class="control-row">
-          <button id="prev" aria-label="Previous">⏮</button>
+          <button id="prev" aria-label="Previous">←</button>
           <button id="play" aria-label="Play">▶</button>
-          <button id="next" aria-label="Next">⏭</button>
+          <button id="next" aria-label="Next">→</button>
         </div>
         <label id="speed-wrap" for="speed-select">Speed</label>
         <select id="speed-select">
